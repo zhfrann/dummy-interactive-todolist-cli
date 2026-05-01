@@ -1,0 +1,100 @@
+# Todolist CLI
+
+Node.js-based todolist CLI with layered architecture. Data is stored in a local JSON file.
+
+## Features
+
+- Create, update, delete, and find by id
+- Search by title, description, or timestamp (createdAt/updatedAt)
+- Show all data when search runs without filters
+- JSON file storage under the data folder
+
+## Folder Structure
+
+```
+.
+├── data
+│   └── todos.json
+├── package.json
+├── README.md
+└── src
+    ├── application
+    │   └── TodoService.js
+    ├── config
+    │   └── paths.js
+    ├── domain
+    │   ├── Todo.js
+    │   └── todoStatus.js
+    ├── infrastructure
+    │   └── FileTodoRepository.js
+    ├── presentation
+    │   └── cli.js
+    └── utils
+        ├── argParser.js
+        └── date.js
+
+9 directories, 11 files
+```
+
+## Requirements
+
+- Node.js >= 16
+
+## Running
+
+Run directly with Node:
+
+```
+node src/presentation/cli.js <command> [options]
+```
+
+Or via npm script:
+
+```
+npm run start -- <command> [options]
+```
+
+## Commands and Options
+
+### Create
+
+```
+node src/presentation/cli.js create --title "Study" --desc "Module 10" --status pending
+```
+
+### Update
+
+```
+node src/presentation/cli.js update --id <id> --title "Study PPL" --status in-progress
+```
+
+### Delete
+
+```
+node src/presentation/cli.js delete --id <id>
+```
+
+### Find by id
+
+```
+node src/presentation/cli.js find --id <id>
+```
+
+### Search
+
+```
+node src/presentation/cli.js search --title "study"
+node src/presentation/cli.js search --desc "lab"
+node src/presentation/cli.js search --timestamp "2024-05-02"
+```
+
+Notes:
+
+- `search` without filters will show all data.
+- `--id` can also be provided as the first argument after the command.
+- Valid status values: `pending`, `in-progress`, `done`.
+- Nilai status yang valid: `pending`, `in-progress`, `done`.
+
+## Data
+
+The data file lives at `data/todos.json`. If the file does not exist, the app will create it automatically.
