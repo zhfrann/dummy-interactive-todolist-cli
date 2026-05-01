@@ -110,7 +110,7 @@ function printTodos(todos, format) {
 
 /** Resolve the todo id from options or positionals. */
 function getId(options, positionals) {
-    return options.id || positionals[0];
+    return positionals[0];
 }
 
 /** Normalize description from supported flags. */

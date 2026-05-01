@@ -30,7 +30,7 @@ class Todo {
         }
 
         const cleanDescription = description ? String(description).trim() : "";
-        const cleanStatus = status ? String(status).trim() : STATUSES.PENDING;
+        const cleanStatus = status ? String(status).trim() : STATUSES.DONE;
         if (!isValidStatus(cleanStatus)) {
             throw new Error("Invalid status");
         }
@@ -99,8 +99,7 @@ class Todo {
                 ? String(description).trim()
                 : String(this.description || "");
 
-        const nextStatus =
-            status !== undefined ? String(status).trim() : String(this.status).trim();
+        const nextStatus = String(this.status).trim();
         if (!isValidStatus(nextStatus)) {
             throw new Error("Invalid status");
         }

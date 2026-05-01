@@ -68,10 +68,8 @@ class TodoService {
     async searchTodos(filters = {}) {
         const todos = await this.todoRepository.getAll();
 
-        const title = filters.title ? String(filters.title).toLowerCase() : "";
-        const description = filters.description
-            ? String(filters.description).toLowerCase()
-            : "";
+        const title = filters.title ? String(filters.title) : "";
+        const description = filters.description ? String(filters.description) : "";
         const timestamp = filters.timestamp ? String(filters.timestamp) : "";
 
         if (!title && !description && !timestamp) {
@@ -82,26 +80,22 @@ class TodoService {
             let matched = false;
 
             if (title) {
-                const value = String(todo.title || "").toLowerCase();
+                const value = String(todo.title || "");
                 matched = matched || value.includes(title);
             }
 
             if (description) {
-                const value = String(todo.description || "").toLowerCase();
+                const value = String(todo.description || "");
                 matched = matched || value.includes(description);
             }
 
             if (timestamp) {
                 const createdAt = String(todo.createdAt || "");
-                const updatedAt = String(todo.updatedAt || "");
                 const humanCreatedAt = formatHumanDate(createdAt);
-                const humanUpdatedAt = formatHumanDate(updatedAt);
                 matched =
                     matched ||
                     createdAt.includes(timestamp) ||
-                    updatedAt.includes(timestamp) ||
-                    humanCreatedAt.toLowerCase().includes(timestamp.toLowerCase()) ||
-                    humanUpdatedAt.toLowerCase().includes(timestamp.toLowerCase());
+                    humanCreatedAt.includes(timestamp);
             }
 
             return matched;
