@@ -10,6 +10,7 @@ Node.js-based todolist CLI with layered architecture. Data is stored in a local 
 - JSON file storage under the data folder
 - Full interactive menu with `--interactive`
 - Table output format (default in interactive mode)
+- Short 8-character alphanumeric id for easier tracking
 
 ## Folder Structure
 
@@ -34,10 +35,11 @@ Node.js-based todolist CLI with layered architecture. Data is stored in a local 
     └── utils
         ├── argParser.js
         ├── date.js
+        ├── id.js
         ├── prompt.js
         └── table.js
 
-    9 directories, 13 files
+    9 directories, 14 files
 ```
 
 ## Requirements
@@ -113,6 +115,7 @@ Notes:
 - `--id` can also be provided as the first argument after the command.
 - Valid status values: `pending`, `in-progress`, `done`.
 - `--format` accepts `json` or `table`. Interactive mode defaults to table output.
+- New todos use short 8-character alphanumeric ids (for example: `k4m2x9p1`). Existing ids remain valid.
 
 ## Data
 

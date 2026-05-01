@@ -1,6 +1,6 @@
-const crypto = require("crypto");
 const { STATUSES, isValidStatus } = require("./todoStatus");
 const { nowISO } = require("../utils/date");
+const { generateShortId } = require("../utils/id");
 
 /** Domain entity that represents a todo item. */
 class Todo {
@@ -15,10 +15,15 @@ class Todo {
 
     /**
      * Create a new todo instance with generated id and timestamps.
-     * @param {{title: string, description?: string, status?: string}} data
+     * @param {{id?: string, title: string, description?: string, status?: string}} data
      * @returns {Todo}
      */
-    static createNew({ title, description, status }) {
+    static createNew({ id, title, description, status }) {
+        const cleanId = id ? String(id).trim() : generateShortId();
+        if (!cleanId) {
+            throw new Error("Id is required");
+        }
+
         const cleanTitle = String(title || "").trim();
         if (!cleanTitle) {
             throw new Error("Title is required");
@@ -32,7 +37,7 @@ class Todo {
 
         const now = nowISO();
         return new Todo({
-            id: crypto.randomUUID(),
+            id: cleanId,
             title: cleanTitle,
             description: cleanDescription,
             createdAt: now,
