@@ -5,12 +5,12 @@
  */
 function parseArgs(argv) {
     const result = {
-        command: argv[0],
+        command: undefined,
         options: {},
         positionals: []
     };
 
-    let i = 1;
+    let i = 0;
     while (i < argv.length) {
         const current = argv[i];
         if (current && current.startsWith("--")) {
@@ -32,7 +32,11 @@ function parseArgs(argv) {
             continue;
         }
 
-        result.positionals.push(current);
+        if (!result.command) {
+            result.command = current;
+        } else {
+            result.positionals.push(current);
+        }
         i += 1;
     }
 

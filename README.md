@@ -8,6 +8,8 @@ Node.js-based todolist CLI with layered architecture. Data is stored in a local 
 - Search by title, description, or timestamp (createdAt/updatedAt)
 - Show all data when search runs without filters
 - JSON file storage under the data folder
+- Full interactive menu with `--interactive`
+- Table output format (default in interactive mode)
 
 ## Folder Structure
 
@@ -31,9 +33,11 @@ Node.js-based todolist CLI with layered architecture. Data is stored in a local 
     │   └── cli.js
     └── utils
         ├── argParser.js
-        └── date.js
+        ├── date.js
+        ├── prompt.js
+        └── table.js
 
-9 directories, 11 files
+    9 directories, 13 files
 ```
 
 ## Requirements
@@ -88,12 +92,27 @@ node src/presentation/cli.js search --desc "lab"
 node src/presentation/cli.js search --timestamp "2024-05-02"
 ```
 
+### Interactive Menu
+
+```
+node src/presentation/cli.js --interactive
+```
+
+Choose a menu option and keep interacting until you select Exit.
+
+### Output Format
+
+```
+node src/presentation/cli.js search --format table
+node src/presentation/cli.js search --format json
+```
+
 Notes:
 
 - `search` without filters will show all data.
 - `--id` can also be provided as the first argument after the command.
 - Valid status values: `pending`, `in-progress`, `done`.
-- Nilai status yang valid: `pending`, `in-progress`, `done`.
+- `--format` accepts `json` or `table`. Interactive mode defaults to table output.
 
 ## Data
 
