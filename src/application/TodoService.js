@@ -1,5 +1,6 @@
 const { Todo } = require("../domain/Todo");
 const { generateShortId } = require("../utils/id");
+const { formatHumanDate } = require("../utils/date");
 
 const MAX_ID_ATTEMPTS = 5;
 
@@ -93,7 +94,14 @@ class TodoService {
             if (timestamp) {
                 const createdAt = String(todo.createdAt || "");
                 const updatedAt = String(todo.updatedAt || "");
-                matched = matched || createdAt.includes(timestamp) || updatedAt.includes(timestamp);
+                const humanCreatedAt = formatHumanDate(createdAt);
+                const humanUpdatedAt = formatHumanDate(updatedAt);
+                matched =
+                    matched ||
+                    createdAt.includes(timestamp) ||
+                    updatedAt.includes(timestamp) ||
+                    humanCreatedAt.toLowerCase().includes(timestamp.toLowerCase()) ||
+                    humanUpdatedAt.toLowerCase().includes(timestamp.toLowerCase());
             }
 
             return matched;
