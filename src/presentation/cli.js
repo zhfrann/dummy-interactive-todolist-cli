@@ -4,8 +4,21 @@ const { TodoService } = require("../application/TodoService");
 const { parseArgs } = require("../utils/argParser");
 const { createPrompter } = require("../utils/prompt");
 const { formatTodosTable } = require("../utils/table");
+const { formatHumanDate } = require("../utils/date");
 const { STATUSES, ALL_STATUSES } = require("../domain/todoStatus");
 const { TODO_FILE } = require("../config/paths");
+
+const USE_COLOR = Boolean(process.stdout.isTTY) && !process.env.NO_COLOR;
+const COLORS = {
+    reset: "\x1b[0m",
+    bold: "\x1b[1m",
+    dim: "\x1b[2m",
+    cyan: "\x1b[36m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    red: "\x1b[31m"
+};
+const PROMPT_PREFIX = ">";
 
 const USAGE = `
 Todolist CLI
@@ -40,29 +53,59 @@ Examples:
 const repository = new FileTodoRepository(TODO_FILE);
 const service = new TodoService(repository);
 
+function colorize(text, color) {
+    if (!USE_COLOR) {
+        return text;
+    }
+
+    return `${color}${text}${COLORS.reset}`;
+}
+
+function separator() {
+    return colorize("-".repeat(52), COLORS.dim);
+}
+
+function logSuccess(message) {
+    console.log(colorize(message, COLORS.green));
+}
+
+function logWarning(message) {
+    console.log(colorize(message, COLORS.yellow));
+}
+
+function logInfo(message) {
+    console.log(colorize(message, COLORS.cyan));
+}
+
+function logError(message) {
+    console.error(colorize(message, COLORS.red));
+}
+
 /** Print a single todo as JSON or table. */
 function printTodo(todo, format) {
+    const displayTodo = formatTodoForDisplay(todo);
     if (format === "table") {
-        console.log(formatTodosTable([todo]));
+        console.log(formatTodosTable([displayTodo]));
         return;
     }
 
-    console.log(JSON.stringify(todo, null, 2));
+    console.log(JSON.stringify(displayTodo, null, 2));
 }
 
 /** Print a list of todos as JSON or table. */
 function printTodos(todos, format) {
+    const displayTodos = formatTodosForDisplay(todos);
     if (format === "table") {
-        if (!todos.length) {
-            console.log("No todos found.");
+        if (!displayTodos.length) {
+            logWarning("No todos found.");
             return;
         }
 
-        console.log(formatTodosTable(todos));
+        console.log(formatTodosTable(displayTodos));
         return;
     }
 
-    console.log(JSON.stringify(todos, null, 2));
+    console.log(JSON.stringify(displayTodos, null, 2));
 }
 
 /** Resolve the todo id from options or positionals. */
@@ -99,62 +142,121 @@ function assertOutputFormat(format) {
     }
 }
 
+/** Format a todo for display output. */
+function formatTodoForDisplay(todo) {
+    if (!todo) {
+        return todo;
+    }
+
+    return {
+        ...todo,
+        createdAt: formatHumanDate(todo.createdAt),
+        updatedAt: formatHumanDate(todo.updatedAt)
+    };
+}
+
+/** Format a list of todos for display output. */
+function formatTodosForDisplay(todos) {
+    return todos.map((todo) => formatTodoForDisplay(todo));
+}
+
 /** Print the interactive menu choices. */
-function printMenu() {
+function printMenu(summary) {
+    if (summary) {
+        const summaryLine = [
+            `Total: ${colorize(String(summary.total), COLORS.bold)}`,
+            `Pending: ${colorize(String(summary.pending), COLORS.yellow)}`,
+            `In-progress: ${colorize(String(summary.inProgress), COLORS.cyan)}`,
+            `Done: ${colorize(String(summary.done), COLORS.green)}`
+        ].join(" | ");
+        console.log(summaryLine);
+    }
+
+    console.log(separator());
     console.log(
         [
-            "Interactive Menu",
-            "1) Create todo",
-            "2) Update todo",
-            "3) Delete todo",
-            "4) Find todo by id",
-            "5) Search todos",
-            "6) Exit"
+            colorize("Interactive Menu", COLORS.bold),
+            "  1) [+] Create todo (create, c)",
+            "  2) [~] Update todo (update, u)",
+            "  3) [x] Delete todo (delete, d)",
+            "  4) [?] Find todo by id (find, f)",
+            "  5) [*] Search or list todos (search, s)",
+            "  6) [q] Exit (exit, q)",
+            colorize("Tip: type a number or keyword.", COLORS.dim)
         ].join("\n")
     );
+    console.log(separator());
 }
 
 /** Prompt for a valid menu choice. */
 async function promptMenuChoice(prompter) {
     while (true) {
-        const raw = await prompter.ask("Select menu (1-6): ");
+        const raw = await prompter.ask(
+            `${colorize(PROMPT_PREFIX, COLORS.cyan)} Select menu (1-6 or keyword): `
+        );
         const value = String(raw || "").trim().toLowerCase();
+        if (!value) {
+            logWarning("Please select a menu option.");
+            continue;
+        }
+
         if (value === "6" || value === "exit" || value === "quit" || value === "q") {
             return "exit";
         }
 
-        const number = Number(value);
-        if (Number.isInteger(number) && number >= 1 && number <= 5) {
-            return number;
+        if (value === "1" || value === "create" || value === "c") {
+            return "create";
         }
 
-        console.log("Invalid selection. Choose 1-6.");
+        if (value === "2" || value === "update" || value === "u") {
+            return "update";
+        }
+
+        if (value === "3" || value === "delete" || value === "d") {
+            return "delete";
+        }
+
+        if (value === "4" || value === "find" || value === "f") {
+            return "find";
+        }
+
+        if (value === "5" || value === "search" || value === "s" || value === "list") {
+            return "search";
+        }
+
+        logWarning("Invalid selection. Choose 1-6 or a keyword.");
     }
 }
 
 /** Prompt until a required value is provided. */
 async function promptRequired(prompter, label) {
     while (true) {
-        const raw = await prompter.ask(`${label}: `);
+        const raw = await prompter.ask(
+            `${colorize(PROMPT_PREFIX, COLORS.cyan)} ${label}: `
+        );
         const value = String(raw || "").trim();
         if (value) {
             return value;
         }
 
-        console.log(`${label} is required.`);
+        logWarning(`${label} is required.`);
     }
 }
 
 /** Prompt for an optional value. */
 async function promptOptional(prompter, label) {
-    const raw = await prompter.ask(`${label}: `);
+    const raw = await prompter.ask(
+        `${colorize(PROMPT_PREFIX, COLORS.cyan)} ${label}: `
+    );
     return String(raw || "").trim();
 }
 
 /** Prompt for an optional update field and keep current on empty input. */
 async function promptUpdateField(prompter, label, currentValue) {
     const display = currentValue ? ` [${currentValue}]` : " [empty]";
-    const raw = await prompter.ask(`${label}${display} (leave blank to keep): `);
+    const raw = await prompter.ask(
+        `${colorize(PROMPT_PREFIX, COLORS.cyan)} ${label}${display} (leave blank to keep): `
+    );
     return String(raw || "").trim();
 }
 
@@ -163,14 +265,16 @@ async function promptStatusWithDefault(prompter, defaultStatus) {
     const choices = Object.values(STATUSES).join(", ");
 
     while (true) {
-        const raw = await prompter.ask(`Status [${defaultStatus}] (${choices}): `);
+        const raw = await prompter.ask(
+            `${colorize(PROMPT_PREFIX, COLORS.cyan)} Status [${defaultStatus}] (${choices}): `
+        );
         const value = String(raw || "").trim();
         const nextStatus = value || defaultStatus;
         if (ALL_STATUSES.has(nextStatus)) {
             return nextStatus;
         }
 
-        console.log(`Invalid status. Use: ${choices}`);
+        logWarning(`Invalid status. Use: ${choices}`);
     }
 }
 
@@ -180,7 +284,7 @@ async function promptStatusOptional(prompter, currentStatus) {
 
     while (true) {
         const raw = await prompter.ask(
-            `Status [${currentStatus}] (${choices}, leave blank to keep): `
+            `${colorize(PROMPT_PREFIX, COLORS.cyan)} Status [${currentStatus}] (${choices}, leave blank to keep): `
         );
         const value = String(raw || "").trim();
         if (!value) {
@@ -191,37 +295,77 @@ async function promptStatusOptional(prompter, currentStatus) {
             return value;
         }
 
-        console.log(`Invalid status. Use: ${choices}`);
+        logWarning(`Invalid status. Use: ${choices}`);
     }
+}
+
+/** Pause so the user can read the output. */
+async function pause(prompter) {
+    await prompter.ask(
+        `${colorize(PROMPT_PREFIX, COLORS.cyan)} Press Enter to return to the menu...`
+    );
+}
+
+function printSection(title) {
+    console.log("");
+    console.log(colorize(title, COLORS.bold));
+    console.log(separator());
+}
+
+/** Build a summary for the interactive menu header. */
+async function getTodoSummary() {
+    const todos = await service.searchTodos();
+    const summary = {
+        total: todos.length,
+        pending: 0,
+        inProgress: 0,
+        done: 0
+    };
+
+    todos.forEach((todo) => {
+        if (todo.status === STATUSES.PENDING) {
+            summary.pending += 1;
+        } else if (todo.status === STATUSES.IN_PROGRESS) {
+            summary.inProgress += 1;
+        } else if (todo.status === STATUSES.DONE) {
+            summary.done += 1;
+        }
+    });
+
+    return summary;
 }
 
 /** Run the full interactive menu loop. */
 async function runInteractiveMenu(prompter, outputFormat) {
     while (true) {
-        printMenu();
+        const summary = await getTodoSummary();
+        printMenu(summary);
         const choice = await promptMenuChoice(prompter);
 
         if (choice === "exit") {
-            console.log("Goodbye.");
+            logInfo("Goodbye.");
             return;
         }
 
         try {
             switch (choice) {
-                case 1: {
+                case "create": {
+                    printSection("Create Todo");
                     const title = await promptRequired(prompter, "Title");
                     const description = await promptOptional(prompter, "Description (optional)");
                     const status = await promptStatusWithDefault(prompter, STATUSES.PENDING);
                     const todo = await service.createTodo({ title, description, status });
+                    logSuccess("Todo created.");
                     printTodo(todo, outputFormat);
                     break;
                 }
 
-                case 2: {
+                case "update": {
+                    printSection("Update Todo");
                     const id = await promptRequired(prompter, "Id");
                     const existing = await service.findById(id);
                     if (!existing) {
-                        console.log("Todo not found");
+                        logWarning("Todo not found");
                         break;
                     }
 
@@ -251,25 +395,27 @@ async function runInteractiveMenu(prompter, outputFormat) {
                         updates.description === undefined &&
                         updates.status === undefined
                     ) {
-                        console.log("No updates provided.");
+                        logWarning("No updates provided.");
                         break;
                     }
 
                     const updated = await service.updateTodo(id, updates);
                     if (!updated) {
-                        console.log("Todo not found");
+                        logWarning("Todo not found");
                         break;
                     }
 
+                    logSuccess("Todo updated.");
                     printTodo(updated, outputFormat);
                     break;
                 }
 
-                case 3: {
+                case "delete": {
+                    printSection("Delete Todo");
                     const id = await promptRequired(prompter, "Id");
                     const existing = await service.findById(id);
                     if (!existing) {
-                        console.log("Todo not found");
+                        logWarning("Todo not found");
                         break;
                     }
 
@@ -278,20 +424,25 @@ async function runInteractiveMenu(prompter, outputFormat) {
                         false
                     );
                     if (!confirmed) {
-                        console.log("Delete canceled.");
+                        logInfo("Delete canceled.");
                         break;
                     }
 
                     const deleted = await service.deleteTodo(id);
-                    console.log(deleted ? "Todo deleted" : "Todo not found");
+                    if (deleted) {
+                        logSuccess("Todo deleted.");
+                    } else {
+                        logWarning("Todo not found");
+                    }
                     break;
                 }
 
-                case 4: {
+                case "find": {
+                    printSection("Find Todo");
                     const id = await promptRequired(prompter, "Id");
                     const todo = await service.findById(id);
                     if (!todo) {
-                        console.log("Todo not found");
+                        logWarning("Todo not found");
                         break;
                     }
 
@@ -299,7 +450,9 @@ async function runInteractiveMenu(prompter, outputFormat) {
                     break;
                 }
 
-                case 5: {
+                case "search": {
+                    printSection("Search Todos");
+                    logInfo("Leave filters empty to list all todos.");
                     const title = await promptOptional(prompter, "Title filter (optional)");
                     const description = await promptOptional(
                         prompter,
@@ -307,7 +460,7 @@ async function runInteractiveMenu(prompter, outputFormat) {
                     );
                     const timestamp = await promptOptional(
                         prompter,
-                        "Timestamp filter (optional)"
+                        "Timestamp filter (optional, ISO or display)"
                     );
 
                     const todos = await service.searchTodos({
@@ -323,8 +476,10 @@ async function runInteractiveMenu(prompter, outputFormat) {
                     break;
             }
         } catch (error) {
-            console.error(`Error: ${error.message}`);
+            logError(`Error: ${error.message}`);
         }
+
+        await pause(prompter);
     }
 }
 
@@ -554,6 +709,6 @@ async function main() {
 }
 
 main().catch((error) => {
-    console.error(`Error: ${error.message}`);
+    logError(`Error: ${error.message}`);
     process.exit(1);
 });

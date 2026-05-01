@@ -11,6 +11,7 @@ Node.js-based todolist CLI with layered architecture. Data is stored in a local 
 - Full interactive menu with `--interactive`
 - Table output format (default in interactive mode)
 - Short 8-character alphanumeric id for easier tracking
+- Human-friendly timestamps in CLI output
 
 ## Folder Structure
 
@@ -101,6 +102,7 @@ node src/presentation/cli.js --interactive
 ```
 
 Choose a menu option and keep interacting until you select Exit.
+The menu shows a quick status summary and accepts numbers or keywords (for example: `create`, `search`, `exit`).
 
 ### Output Format
 
@@ -116,6 +118,9 @@ Notes:
 - Valid status values: `pending`, `in-progress`, `done`.
 - `--format` accepts `json` or `table`. Interactive mode defaults to table output.
 - New todos use short 8-character alphanumeric ids (for example: `k4m2x9p1`). Existing ids remain valid.
+- Timestamps are shown in a human-friendly local format in CLI output.
+- Timestamp search matches ISO strings or the displayed human-friendly format.
+- Colored output is enabled for interactive usage when stdout is a TTY. Set `NO_COLOR=1` to disable.
 
 ## Data
 

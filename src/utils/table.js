@@ -47,7 +47,7 @@ function buildTable(headers, rows) {
  * @param {Array<{id: string, title: string, description: string, status: string, createdAt: string, updatedAt: string}>} todos
  */
 function formatTodosTable(todos) {
-    const headers = ["Id", "Title", "Description", "Status", "CreatedAt", "UpdatedAt"];
+    const headers = ["Id", "Title", "Description", "Status", "Created", "Updated"];
     const rows = todos.map((todo) => [
         todo.id,
         todo.title,
