@@ -17,6 +17,10 @@ Node.js-based todolist CLI with layered architecture. Data is stored in a local 
 
 ```
 .
+├── .gitignore
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── LICENSE
 ├── data
 │   └── todos.json
 ├── package.json
@@ -39,8 +43,6 @@ Node.js-based todolist CLI with layered architecture. Data is stored in a local 
         ├── id.js
         ├── prompt.js
         └── table.js
-
-    9 directories, 14 files
 ```
 
 ## Requirements

@@ -1,6 +1,6 @@
 {
     "name": "todolist-cli",
-    "version": "1.0.0",
+    "version": "0.0.2",
     "description": "CLI todolist with layered architecture",
     "main": "src/presentation/cli.js",
     "bin": {
