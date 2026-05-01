@@ -120,6 +120,7 @@ Notes:
 - New todos use short 8-character alphanumeric ids (for example: `k4m2x9p1`). Existing ids remain valid.
 - Timestamps are shown in a human-friendly local format in CLI output.
 - Timestamp search matches ISO strings or the displayed human-friendly format.
+- Colored output is enabled for interactive usage when stdout is a TTY. Set `NO_COLOR=1` to disable.
 
 ## Data
 
