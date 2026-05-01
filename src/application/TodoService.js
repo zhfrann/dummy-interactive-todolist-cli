@@ -1,4 +1,7 @@
 const { Todo } = require("../domain/Todo");
+const { generateShortId } = require("../utils/id");
+
+const MAX_ID_ATTEMPTS = 5;
 
 /** Application service orchestrating todo operations. */
 class TodoService {
@@ -8,7 +11,22 @@ class TodoService {
 
     /** Create a new todo. */
     async createTodo({ title, description, status }) {
-        const todo = Todo.createNew({ title, description, status });
+        const todos = await this.todoRepository.getAll();
+        const existingIds = new Set(todos.map((todo) => todo.id));
+
+        // Avoid collisions with existing ids by retrying a few times.
+        let id = generateShortId();
+        let attempts = 0;
+        while (existingIds.has(id) && attempts < MAX_ID_ATTEMPTS) {
+            id = generateShortId();
+            attempts += 1;
+        }
+
+        if (existingIds.has(id)) {
+            throw new Error("Failed to generate a unique id");
+        }
+
+        const todo = Todo.createNew({ id, title, description, status });
         return this.todoRepository.create(todo.toJSON());
     }
 
