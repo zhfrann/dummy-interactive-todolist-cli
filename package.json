@@ -18,5 +18,8 @@
     "type": "commonjs",
     "engines": {
         "node": ">=16"
+    },
+    "devDependencies": {
+        "pkg": "^5.8.1"
     }
 }
